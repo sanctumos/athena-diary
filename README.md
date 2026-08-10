@@ -4,7 +4,7 @@
 
 Off-context **diary** for Letta agents: SQLite source of truth + MCP tools so journaling does not stuff core memory. Pattern matches [origin_conversation](https://github.com/sanctumos/origin_conversation) (DB + MCP wrapper).
 
-**Status:** Scaffold (v0.1.0) — schema, write/search, embeddings (`sqlite-vec`), and sleeptime clerk land in later Build slices. Product requirements: DSC Tasks [Doc #1039](https://tasks.decisionsciencecorp.com/admin/doc.php?id=1039) (board **Athena Diary**).
+**Status:** v0.1.0 on moya — Build slices shipped; diary MCP attached to Athena + sleeptime. Product requirements: DSC Tasks [Doc #1039](https://tasks.decisionsciencecorp.com/admin/doc.php?id=1039) (board **Athena Diary**).
 
 ---
 

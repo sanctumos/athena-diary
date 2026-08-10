@@ -16,10 +16,20 @@ See `.env.example` for the full list.
 ## moya (Athena) layout
 
 ```
-~/sanctum/agents/athena/diary/          # git clone of sanctumos/athena-diary
-~/sanctum/agents/athena/diary/db/       # DIARY_DB lives here
-~/sanctum/venv/bin/athena-diary-mcp     # after: pip install -e '.[mcp]'
-~/sanctum/venv/bin/athena-diary-backlog # cron helper
+~/sanctum/agents/athena/diary/              # git clone of sanctumos/athena-diary
+~/sanctum/agents/athena/diary/.venv/        # local venv (Sanctum shared venv is root-owned)
+~/sanctum/agents/athena/diary/db/           # DIARY_DB lives here
+.venv/bin/athena-diary-mcp                  # MCP stdio entry (`serve`)
+.venv/bin/athena-diary-backlog              # cron helper
+```
+
+Install:
+
+```bash
+cd ~/sanctum/agents/athena/diary
+python3 -m venv .venv
+.venv/bin/pip install -e '.[mcp,dev]'
+# optional: .venv/bin/pip install -e '.[vec]'
 ```
 
 Env for the MCP process (Letta stdio server `env`):
@@ -29,7 +39,7 @@ Env for the MCP process (Letta stdio server `env`):
 | `DIARY_DB` | `/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db` |
 | `DIARY_EMBED_MODE` | `letta` |
 
-Letta MCP server registration uses command `athena-diary-mcp` with args `["serve"]`.
+Letta MCP server: command `.venv/bin/athena-diary-mcp`, args `["serve"]`. Attach tools to **Athena_Vernal** and **Athena_Vernal-sleeptime**.
 
 ## Cron safety net
 
@@ -38,13 +48,13 @@ When unprocessed backlog exceeds threshold (default 50), process a batch:
 ```bash
 DIARY_DB=/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db \
 DIARY_EMBED_MODE=letta \
-/home/rizzn/sanctum/venv/bin/athena-diary-backlog --threshold 50 --batch 25 \
+/home/rizzn/sanctum/agents/athena/diary/.venv/bin/athena-diary-backlog --threshold 50 --batch 25 \
   >> /home/rizzn/logs/athena-diary-backlog.log 2>&1
 ```
 
 Suggested crontab (every 30 minutes):
 
 ```
-*/30 * * * * DIARY_DB=/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db DIARY_EMBED_MODE=letta /home/rizzn/sanctum/venv/bin/athena-diary-backlog --threshold 50 --batch 25 >> /home/rizzn/logs/athena-diary-backlog.log 2>&1
+*/30 * * * * DIARY_DB=/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db DIARY_EMBED_MODE=letta /home/rizzn/sanctum/agents/athena/diary/.venv/bin/athena-diary-backlog --threshold 50 --batch 25 >> /home/rizzn/logs/athena-diary-backlog.log 2>&1
 ```
 
