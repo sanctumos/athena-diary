@@ -41,20 +41,9 @@ Env for the MCP process (Letta stdio server `env`):
 
 Letta MCP server: command `.venv/bin/athena-diary-mcp`, args `["serve"]`. Attach tools to **Athena_Vernal** and **Athena_Vernal-sleeptime**.
 
-## Cron safety net
+## Cron safety net — **not used (out of spec)**
 
-When unprocessed backlog exceeds threshold (default 50), process a batch:
+v1 clerk path is **sleeptime-only** (`diary_sleeptime_pass` on Athena sleeptime turns). Do **not** install a moya crontab for `athena-diary-backlog`.
 
-```bash
-DIARY_DB=/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db \
-DIARY_EMBED_MODE=letta \
-/home/rizzn/sanctum/agents/athena/diary/.venv/bin/athena-diary-backlog --threshold 50 --batch 25 \
-  >> /home/rizzn/logs/athena-diary-backlog.log 2>&1
-```
-
-Suggested crontab (every 30 minutes):
-
-```
-*/30 * * * * DIARY_DB=/home/rizzn/sanctum/agents/athena/diary/db/athena-diary.db DIARY_EMBED_MODE=letta /home/rizzn/sanctum/agents/athena/diary/.venv/bin/athena-diary-backlog --threshold 50 --batch 25 >> /home/rizzn/logs/athena-diary-backlog.log 2>&1
-```
+The `athena-diary-backlog` CLI remains in the package for manual/ops one-shots if Mark explicitly asks; it is **not** part of the deployed diary design.
 
