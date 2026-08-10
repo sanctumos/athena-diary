@@ -27,4 +27,5 @@ def test_health_payload():
     assert h["status"] == "ok"
     assert h["plugin"] == "athena_diary"
     assert h["version"] == __version__
-    assert h["stage"] == "scaffold"
+    assert h["stage"] == "mcp"
+    assert any(c["name"] == "diary_write" for c in describe()["commands"])

@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""SMCP / agent-facing describe contract (scaffold). Tools land in later Build slices."""
+"""SMCP / agent-facing describe contract."""
 
 from __future__ import annotations
 
+import copy
 from typing import Any, Dict
 
+from .server import TOOLS_META
 from .version import __version__
 
 DESCRIBE_SPEC: Dict[str, Any] = {
@@ -14,13 +16,13 @@ DESCRIBE_SPEC: Dict[str, Any] = {
         "version": __version__,
         "description": (
             "Athena Diary — off-context SQLite journal with MCP tools "
-            "(write/search/sleeptime clerk). Scaffold only until later slices land."
+            "(write/get/search/sleeptime clerk)."
         ),
     },
     "commands": [
         {
             "name": "health",
-            "description": "Return plugin health and version (scaffold smoke).",
+            "description": "Return plugin health and version.",
             "parameters": [],
         },
     ],
@@ -28,7 +30,27 @@ DESCRIBE_SPEC: Dict[str, Any] = {
 
 
 def describe() -> Dict[str, Any]:
-    """Return a copy of the SMCP describe spec."""
-    import copy
-
-    return copy.deepcopy(DESCRIBE_SPEC)
+    """Return SMCP describe JSON including diary tools (deepcopy-safe)."""
+    spec = copy.deepcopy(DESCRIBE_SPEC)
+    spec["plugin"]["version"] = __version__
+    for t in TOOLS_META:
+        props = t["inputSchema"].get("properties") or {}
+        required = set(t["inputSchema"].get("required") or [])
+        params = []
+        for pname, pschema in props.items():
+            params.append(
+                {
+                    "name": pname,
+                    "type": pschema.get("type", "string"),
+                    "required": pname in required,
+                    "description": pschema.get("description", ""),
+                }
+            )
+        spec["commands"].append(
+            {
+                "name": t["name"],
+                "description": t["description"],
+                "parameters": params,
+            }
+        )
+    return spec

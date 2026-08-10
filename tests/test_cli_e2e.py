@@ -37,7 +37,8 @@ def test_cli_health():
     assert r.returncode == 0
     data = json.loads(r.stdout)
     assert data["status"] == "ok"
-    assert data["stage"] == "scaffold"
+    assert data["stage"] == "mcp"
+    assert any(c["name"] == "diary_search" for c in json.loads(_run("--describe").stdout)["commands"])
 
 
 def test_cli_help_exit_nonzero_without_command():

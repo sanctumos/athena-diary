@@ -14,5 +14,5 @@ def health() -> Dict[str, Any]:
         "status": "ok",
         "plugin": "athena_diary",
         "version": __version__,
-        "stage": "scaffold",
+        "stage": "mcp",
     }
