@@ -84,39 +84,13 @@ v1 assumes a **dedicated SQLite file per agent** (or per deployment you intentio
 
 ---
 
-## Sanctum / moya layout (reference deploy)
+## Sanctum / legacy Letta
 
-Example layout when the first production user (Athena) runs on a Sanctum host:
+Full bootstrap (install layout, MCP server registration, hot + sleeptime tool attach, clerk prompts): **[LETTA_BOOTSTRAP.md](LETTA_BOOTSTRAP.md)**.
 
-```text
-~/sanctum/agents/<agent>/diary/           # git clone of sanctumos/athena-diary
-~/sanctum/agents/<agent>/diary/.venv/     # local venv recommended
-~/sanctum/agents/<agent>/diary/db/        # DIARY_DB lives here
-.venv/bin/athena-diary-mcp                # MCP stdio entry (`serve`)
-```
+v1 clerk path is **sleeptime-only** (`diary_sleeptime_pass`). The `athena-diary-backlog` CLI is for manual ops one-shots only — not the default deployed design.
 
-Install:
-
-```bash
-cd ~/sanctum/agents/<agent>/diary
-python3 -m venv .venv
-.venv/bin/pip install -e '.[mcp]'
-# optional: .venv/bin/pip install -e '.[vec]'
-```
-
-Letta MCP server sketch:
-
-- **command:** `/path/to/diary/.venv/bin/athena-diary-mcp`
-- **args:** `["serve"]`
-- **env:** `DIARY_DB=…/db/athena-diary.db`, `DIARY_EMBED_MODE=letta` (plus any host embed secrets)
-
-Attach tools to both the **hot agent** and its **sleeptime** companion so the clerk path can run.
-
-### Clerk path
-
-v1 clerk path is **sleeptime-only**: the sleeptime agent calls `diary_sleeptime_pass`. Do not treat wall-clock cron as required.
-
-The `athena-diary-backlog` CLI remains available for **manual** ops one-shots; it is not the default deployed design.
+Attaching to ChatGPT, Claude Code, Cursor, and other MCP hosts: **[MCP_CLIENTS.md](MCP_CLIENTS.md)**.
 
 ---
 

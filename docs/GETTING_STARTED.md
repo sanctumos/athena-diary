@@ -91,7 +91,9 @@ Clients connect with **GET** `/sse` and post messages under `/messages/`. Prefer
 
 ## Step 4: Attach your MCP client
 
-See [MCP_CLIENTS.md](MCP_CLIENTS.md) for Claude Desktop, Cursor, Letta, and generic configs.
+See [MCP_CLIENTS.md](MCP_CLIENTS.md) for **ChatGPT**, **Claude Code**, Claude Desktop, Cursor, Letta, and other MCP hosts.
+
+Attaching to a self-hosted / legacy Letta hot + sleeptime pair (Sanctum pattern): [LETTA_BOOTSTRAP.md](LETTA_BOOTSTRAP.md).
 
 After attach, the agent should see:
 

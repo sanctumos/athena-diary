@@ -59,7 +59,8 @@ athena-diary-mcp health
 athena-diary-mcp serve
 ```
 
-Wire the server into your MCP client: **[docs/MCP_CLIENTS.md](docs/MCP_CLIENTS.md)**.  
+Wire the server into your MCP client: **[docs/MCP_CLIENTS.md](docs/MCP_CLIENTS.md)** (ChatGPT, Claude Code, Cursor, Letta, others).  
+Legacy Letta / Sanctum bootstrap: **[docs/LETTA_BOOTSTRAP.md](docs/LETTA_BOOTSTRAP.md)**.  
 Step-by-step install: **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)**.
 
 ---
@@ -71,9 +72,10 @@ Step-by-step install: **[docs/GETTING_STARTED.md](docs/GETTING_STARTED.md)**.
 | [docs/README.md](docs/README.md) | Documentation index |
 | [docs/OVERVIEW.md](docs/OVERVIEW.md) | Purpose, naming, architecture, what belongs where |
 | [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) | Install, first entry, attach to an agent |
+| [docs/LETTA_BOOTSTRAP.md](docs/LETTA_BOOTSTRAP.md) | Bootstrapping onto a legacy Letta hot + sleeptime instance |
+| [docs/MCP_CLIENTS.md](docs/MCP_CLIENTS.md) | ChatGPT, Claude Code / Desktop, Cursor, Letta, other MCP hosts |
 | [docs/TOOL_REFERENCE.md](docs/TOOL_REFERENCE.md) | Full MCP tool contracts and examples |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars, embed modes, DB path, transports |
-| [docs/MCP_CLIENTS.md](docs/MCP_CLIENTS.md) | Claude Desktop, Cursor, Letta, generic MCP |
 | [docs/AGENTS.md](docs/AGENTS.md) | Short summary for agent / AI readers |
 | [docs/COVERAGE.md](docs/COVERAGE.md) | ≥90% coverage gate for contributors |
 
