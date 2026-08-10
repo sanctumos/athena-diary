@@ -133,3 +133,80 @@ def set_entry_tags(conn: sqlite3.Connection, entry_id: int, names: Sequence[str]
         out.append(clean)
     conn.commit()
     return tuple(sorted(set(out)))
+
+
+def ensure_lesson_family(
+    conn: sqlite3.Connection, slug: str, *, title: Optional[str] = None
+) -> int:
+    clean = (slug or "").strip().lower().replace(" ", "-")
+    if not clean:
+        raise DiaryError("lesson_family slug must be non-empty")
+    conn.execute(
+        "INSERT OR IGNORE INTO lesson_families(slug, title) VALUES (?, ?)",
+        (clean, title or clean),
+    )
+    row = conn.execute(
+        "SELECT id FROM lesson_families WHERE slug = ?", (clean,)
+    ).fetchone()
+    assert row is not None
+    conn.commit()
+    return int(row["id"])
+
+
+def update_entry_clerk(
+    conn: sqlite3.Connection,
+    entry_id: int,
+    *,
+    summary: str,
+    lesson_family_id: Optional[int] = None,
+    mark_processed: bool = True,
+) -> Entry:
+    """Rewrite summary / lesson_family and optionally stamp sleeptime_processed_at."""
+    get_entry(conn, entry_id)
+    if mark_processed:
+        conn.execute(
+            """
+            UPDATE entries SET
+              summary = ?,
+              lesson_family_id = ?,
+              sleeptime_processed_at = datetime('now'),
+              updated_at = datetime('now')
+            WHERE id = ?
+            """,
+            (summary, lesson_family_id, entry_id),
+        )
+    else:
+        conn.execute(
+            """
+            UPDATE entries SET
+              summary = ?,
+              lesson_family_id = ?,
+              updated_at = datetime('now')
+            WHERE id = ?
+            """,
+            (summary, lesson_family_id, entry_id),
+        )
+    conn.commit()
+    return get_entry(conn, entry_id)
+
+
+def add_see_also(
+    conn: sqlite3.Connection, entry_id: int, related_entry_id: int
+) -> None:
+    if entry_id == related_entry_id:
+        return
+    # Store both directions for easy lookup
+    for a, b in ((entry_id, related_entry_id), (related_entry_id, entry_id)):
+        conn.execute(
+            "INSERT OR IGNORE INTO see_also(entry_id, related_entry_id) VALUES (?, ?)",
+            (a, b),
+        )
+    conn.commit()
+
+
+def list_see_also(conn: sqlite3.Connection, entry_id: int) -> Sequence[int]:
+    rows = conn.execute(
+        "SELECT related_entry_id FROM see_also WHERE entry_id = ? ORDER BY related_entry_id",
+        (entry_id,),
+    ).fetchall()
+    return [int(r["related_entry_id"]) for r in rows]
