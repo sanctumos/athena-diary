@@ -130,6 +130,14 @@ def search_diary(
     query: str,
     *,
     limit: int = 20,
+    provider=None,
 ) -> List[SearchHit]:
-    """Keyword search via FTS (+ tags). Semantic merge lands with embeddings/vec slice."""
-    return search_fts(conn, query, limit=limit)
+    """
+    Combined diary search (vec preferred + FTS fill).
+
+    Implementation lives in vector_index to avoid a circular import at module load;
+    this thin wrapper keeps `from athena_diary_mcp.search import search_diary` stable.
+    """
+    from .vector_index import search_diary as _combined
+
+    return _combined(conn, query, limit=limit, provider=provider)
