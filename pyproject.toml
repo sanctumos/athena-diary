@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "athena-diary"
+version = "0.1.0"
+description = "Athena Diary — SQLite + MCP off-context journal for Letta agents (SanctumOS)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "AGPL-3.0-only"
+authors = [
+    { name = "actuallyrizzn", email = "guesswho@rizzn.com" },
+]
+# Scaffold has no hard runtime deps. MCP / SSE / sqlite-vec land in later Build slices.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+]
+mcp = [
+    "mcp>=1.10.1",
+    "starlette>=0.27.0,<0.40.0",
+    "uvicorn>=0.15.0",
+]
+# sqlite-vec wired in a later Build slice; listed here for install docs.
+vec = [
+    "sqlite-vec>=0.1.6",
+]
+# Full agent host install
+all = [
+    "athena-diary[mcp,vec]",
+]
+
+[project.urls]
+Homepage = "https://github.com/sanctumos/athena-diary"
+Repository = "https://github.com/sanctumos/athena-diary"
+Issues = "https://github.com/sanctumos/athena-diary/issues"
+
+[project.scripts]
+athena-diary-mcp = "athena_diary_mcp.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["athena_diary_mcp*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["athena_diary_mcp"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_empty = true
