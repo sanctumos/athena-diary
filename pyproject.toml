@@ -42,6 +42,7 @@ Issues = "https://github.com/sanctumos/athena-diary/issues"
 
 [project.scripts]
 athena-diary-mcp = "athena_diary_mcp.__main__:main"
+athena-diary-backlog = "athena_diary_mcp.cron_backlog:main"
 
 [tool.setuptools.packages.find]
 include = ["athena_diary_mcp*"]
