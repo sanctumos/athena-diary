@@ -141,6 +141,25 @@ def create_server():
     return Server(name="athena-diary-mcp", version=__version__)
 
 
+def register_tools(server) -> None:
+    """Register tools on an mcp.server.Server (mcp 1.x decorator API)."""
+    from mcp.types import TextContent, Tool
+
+    tools = [
+        Tool(name=t["name"], description=t["description"], inputSchema=t["inputSchema"])
+        for t in TOOLS_META
+    ]
+
+    @server.list_tools()
+    async def list_tools():
+        return tools
+
+    @server.call_tool()
+    async def call_tool(tool_name: str, arguments: dict):
+        text = dispatch_tool(tool_name, arguments or {})
+        return [TextContent(type="text", text=text)]
+
+
 def register_tools_core(
     list_tools_decorator,
     call_tool_decorator,
@@ -150,7 +169,7 @@ def register_tools_core(
     """
     Testable registration core (inject MCP decorators/factories).
 
-    Production ``register_tools`` wires real mcp types into this.
+    Mirrors mcp 1.x ``@server.list_tools()`` / ``@server.call_tool()`` wiring.
     """
     tools = [
         tool_factory(
@@ -169,20 +188,3 @@ def register_tools_core(
         return [text_content_factory(type="text", text=text)]
 
     return tools
-
-
-def register_tools(server) -> None:
-    from mcp.types import TextContent, Tool
-
-    def tool_factory(**kwargs):
-        return Tool(**kwargs)
-
-    def text_factory(**kwargs):
-        return TextContent(**kwargs)
-
-    register_tools_core(
-        server.list_tools(),
-        server.call_tool(),
-        text_factory,
-        tool_factory,
-    )
