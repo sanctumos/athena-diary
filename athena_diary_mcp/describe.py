@@ -16,7 +16,8 @@ DESCRIBE_SPEC: Dict[str, Any] = {
         "version": __version__,
         "description": (
             "Athena Diary — off-context SQLite journal with MCP tools "
-            "(write/get/search/sleeptime clerk)."
+            "(write/get/search/sleeptime clerk). Named after Sanctum agent Athena "
+            "(user #1 of this pattern); not Athena-exclusive — any agent can run an instance."
         ),
     },
     "commands": [

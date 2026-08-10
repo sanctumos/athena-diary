@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "athena-diary"
 version = "0.1.0"
-description = "Athena Diary — SQLite + MCP off-context journal for Letta agents (SanctumOS)"
+description = "Athena Diary — SQLite + MCP off-context journal for Letta/MCP agents (SanctumOS; named after Athena, not Athena-only)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "AGPL-3.0-only"
