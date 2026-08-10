@@ -102,3 +102,34 @@ def list_unprocessed(conn: sqlite3.Connection, limit: int = 50) -> Sequence[Entr
         (max(1, int(limit)),),
     ).fetchall()
     return [Entry.from_row(r) for r in rows]
+
+
+def ensure_tag(conn: sqlite3.Connection, name: str) -> int:
+    """Insert tag if missing; return tag id."""
+    clean = (name or "").strip().lower()
+    if not clean:
+        raise DiaryError("tag name must be non-empty")
+    conn.execute("INSERT OR IGNORE INTO tags(name) VALUES (?)", (clean,))
+    row = conn.execute("SELECT id FROM tags WHERE name = ?", (clean,)).fetchone()
+    assert row is not None
+    conn.commit()
+    return int(row["id"])
+
+
+def set_entry_tags(conn: sqlite3.Connection, entry_id: int, names: Sequence[str]) -> tuple[str, ...]:
+    """Replace tags on an entry. Returns normalized tag names."""
+    get_entry(conn, entry_id)  # raises if missing
+    conn.execute("DELETE FROM entry_tags WHERE entry_id = ?", (entry_id,))
+    out: list[str] = []
+    for raw in names:
+        clean = (raw or "").strip().lower()
+        if not clean:
+            continue
+        tid = ensure_tag(conn, clean)
+        conn.execute(
+            "INSERT OR IGNORE INTO entry_tags(entry_id, tag_id) VALUES (?, ?)",
+            (entry_id, tid),
+        )
+        out.append(clean)
+    conn.commit()
+    return tuple(sorted(set(out)))
