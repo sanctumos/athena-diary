@@ -11,20 +11,39 @@ from typing import Any, Callable, List, Optional
 from .db import connect
 from .search import search_diary
 from .sleeptime import sleeptime_pass
-from .store import DiaryError, get_entry, write_entry
+from .store import DiaryError, entry_detail, get_entry, write_entry
 from .version import __version__
 
 logger = logging.getLogger(__name__)
 
+_SEE_ALSO_HELP = (
+    "Cross-reference links between related entries live in see_also (see_also_entry_ids on "
+    "diary_get). Sleeptime creates these when entry summaries are semantically related—same "
+    "thread, recurring pattern, or a later note that revisits an earlier one. Original entries "
+    "stay canonical; write corrections as new entries and let sleeptime wire see_also. "
+    "lesson_family_slug groups thematic siblings."
+)
+
 TOOLS_META = [
     {
         "name": "diary_write",
-        "description": "Append a diary entry (body required). Optional summary, sensitivity_note, source, run_id, message_id.",
+        "description": (
+            "Append a diary entry (body required). Do not edit old entries in place—when a view "
+            "changes, write a new entry and cite the earlier entry id in the body if useful; "
+            "sleeptime may link them via see_also. Optional summary, sensitivity_note, source, "
+            "run_id, message_id."
+        ),
         "inputSchema": {
             "type": "object",
             "properties": {
-                "body": {"type": "string"},
-                "summary": {"type": "string"},
+                "body": {
+                    "type": "string",
+                    "description": "Full diary text. Non-empty. New entries only—no in-place edits.",
+                },
+                "summary": {
+                    "type": "string",
+                    "description": "Optional hot-path gist; sleeptime may rewrite.",
+                },
                 "sensitivity_note": {"type": "string"},
                 "source": {"type": "string", "default": "hot_turn"},
                 "run_id": {"type": "string"},
@@ -36,10 +55,19 @@ TOOLS_META = [
     },
     {
         "name": "diary_get",
-        "description": "Fetch one diary entry by id (includes full body).",
+        "description": (
+            "Fetch one diary entry by id (full body). Response includes see_also_entry_ids "
+            "(cross-refs to related entries), lesson_family_slug, and tags. "
+            + _SEE_ALSO_HELP
+        ),
         "inputSchema": {
             "type": "object",
-            "properties": {"entry_id": {"type": "integer"}},
+            "properties": {
+                "entry_id": {
+                    "type": "integer",
+                    "description": "Entry primary key from diary_write or diary_search.",
+                }
+            },
             "required": ["entry_id"],
             "additionalProperties": False,
         },
@@ -48,7 +76,8 @@ TOOLS_META = [
         "name": "diary_search",
         "description": (
             "Search diary by keyword/semantic over summaries. Returns ids + summaries + dates "
-            "(not full bodies by default)."
+            "(not full bodies). Use diary_get on a hit to read the body and see_also_entry_ids "
+            "for related entries on the same thread."
         ),
         "inputSchema": {
             "type": "object",
@@ -63,12 +92,20 @@ TOOLS_META = [
     {
         "name": "diary_sleeptime_pass",
         "description": (
-            "Clerk: process up to N unprocessed diary entries (tags, lesson_family, "
-            "templated summary, re-embed, see_also). Idempotent."
+            "Clerk: process up to N unprocessed entries—template summary, tags, lesson_family, "
+            "re-embed, and see_also cross-refs when summaries are semantically related (same "
+            "thread / recurring pattern / revisiting an earlier entry). Idempotent. "
+            + _SEE_ALSO_HELP
         ),
         "inputSchema": {
             "type": "object",
-            "properties": {"limit": {"type": "integer", "default": 10}},
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "default": 10,
+                    "description": "Max unprocessed entries to clerk this pass.",
+                }
+            },
             "required": [],
             "additionalProperties": False,
         },
@@ -103,7 +140,7 @@ def dispatch_tool(name: str, arguments: dict) -> str:
             conn = connect()
             try:
                 e = get_entry(conn, int(args["entry_id"]))
-                return _json(asdict(e))
+                return _json(entry_detail(conn, e))
             finally:
                 conn.close()
         if name == "diary_search":

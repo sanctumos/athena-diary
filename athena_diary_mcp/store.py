@@ -210,3 +210,49 @@ def list_see_also(conn: sqlite3.Connection, entry_id: int) -> Sequence[int]:
         (entry_id,),
     ).fetchall()
     return [int(r["related_entry_id"]) for r in rows]
+
+
+def list_entry_tags(conn: sqlite3.Connection, entry_id: int) -> tuple[str, ...]:
+    rows = conn.execute(
+        """
+        SELECT t.name
+        FROM entry_tags et
+        JOIN tags t ON t.id = et.tag_id
+        WHERE et.entry_id = ?
+        ORDER BY t.name
+        """,
+        (entry_id,),
+    ).fetchall()
+    return tuple(str(r["name"]) for r in rows)
+
+
+def get_lesson_family_slug(
+    conn: sqlite3.Connection, lesson_family_id: Optional[int]
+) -> Optional[str]:
+    if lesson_family_id is None:
+        return None
+    row = conn.execute(
+        "SELECT slug FROM lesson_families WHERE id = ?",
+        (int(lesson_family_id),),
+    ).fetchone()
+    return str(row["slug"]) if row is not None else None
+
+
+def entry_detail(conn: sqlite3.Connection, entry: Entry) -> dict[str, Any]:
+    """Entry row plus cross-refs and clerk metadata for MCP responses."""
+    return {
+        "id": entry.id,
+        "body": entry.body,
+        "summary": entry.summary,
+        "sensitivity_note": entry.sensitivity_note,
+        "source": entry.source,
+        "created_at": entry.created_at,
+        "updated_at": entry.updated_at,
+        "run_id": entry.run_id,
+        "message_id": entry.message_id,
+        "lesson_family_id": entry.lesson_family_id,
+        "lesson_family_slug": get_lesson_family_slug(conn, entry.lesson_family_id),
+        "sleeptime_processed_at": entry.sleeptime_processed_at,
+        "tags": list(list_entry_tags(conn, entry.id)),
+        "see_also_entry_ids": list(list_see_also(conn, entry.id)),
+    }

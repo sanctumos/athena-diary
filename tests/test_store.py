@@ -3,7 +3,16 @@
 import pytest
 
 from athena_diary_mcp.db import connect
-from athena_diary_mcp.store import DiaryError, get_entry, list_unprocessed, write_entry
+from athena_diary_mcp.store import (
+    DiaryError,
+    add_see_also,
+    entry_detail,
+    ensure_lesson_family,
+    get_entry,
+    list_unprocessed,
+    set_entry_tags,
+    write_entry,
+)
 
 
 def test_write_and_get(tmp_path, monkeypatch):
@@ -50,4 +59,24 @@ def test_list_unprocessed(tmp_path, monkeypatch):
     conn.commit()
     pending = list_unprocessed(conn, limit=10)
     assert [e.id for e in pending] == [b.id]
+    conn.close()
+
+
+def test_entry_detail_includes_cross_refs(tmp_path, monkeypatch):
+    monkeypatch.setenv("DIARY_DB", str(tmp_path / "d.db"))
+    conn = connect()
+    a = write_entry(conn, "first take on the pattern")
+    b = write_entry(conn, "revisiting the pattern later")
+    add_see_also(conn, a.id, b.id)
+    set_entry_tags(conn, b.id, ["pattern", "revision"])
+    lf_id = ensure_lesson_family(conn, "self-observation")
+    conn.execute(
+        "UPDATE entries SET lesson_family_id = ? WHERE id = ?",
+        (lf_id, b.id),
+    )
+    conn.commit()
+    detail = entry_detail(conn, get_entry(conn, b.id))
+    assert detail["see_also_entry_ids"] == [a.id]
+    assert detail["tags"] == ["pattern", "revision"]
+    assert detail["lesson_family_slug"] == "self-observation"
     conn.close()

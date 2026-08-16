@@ -47,17 +47,30 @@ Additional properties: **not allowed**.
 
 ### Response
 
-JSON object for the created entry (`id`, `body`, `summary`, timestamps, etc.).
+JSON object for the created entry (`id`, `body`, `summary`, timestamps, etc.). Cross-refs (`see_also_entry_ids`) appear after sleeptime has processed the entry—call `diary_get` again later if needed.
+
+---
+
+## Cross-references: `see_also` and `lesson_family`
+
+These already exist—no separate “dogear” tool is required.
+
+| Mechanism | What it is |
+|-----------|------------|
+| **`see_also`** | Entry-to-entry cross-refs. Sleeptime links entries whose **summaries** embed as semantically related (same thread, recurring pattern, a later note revisiting an earlier one). Stored bidirectionally. Exposed on `diary_get` as `see_also_entry_ids`. |
+| **`lesson_family` / `lesson_family_slug`** | Thematic bucket for entries about the same lesson or topic. Assigned during sleeptime. |
+
+**Canonical rule:** old entries are not edited in place. When a view changes, **write a new entry** (cite the earlier id in the body if helpful). Sleeptime may wire `see_also` so the chain stays visible without sanitizing the original.
 
 ---
 
 ## `diary_get`
 
-Fetch one entry by id, including the **full body**.
+Fetch one entry by id, including the **full body** and cross-reference metadata.
 
 ### Description
 
-> Fetch one diary entry by id (includes full body).
+> Fetch one diary entry by id (full body). Response includes `see_also_entry_ids` (cross-refs to related entries), `lesson_family_slug`, and `tags`.
 
 ### Parameters
 
@@ -67,7 +80,8 @@ Fetch one entry by id, including the **full body**.
 
 ### Behavior
 
-- Returns the full row as JSON.
+- Returns the full row plus `see_also_entry_ids`, `lesson_family_slug`, and `tags`.
+- `see_also_entry_ids` is empty until sleeptime has processed the entry (and may stay empty if no related summary matched).
 - Errors with a clear message if the id does not exist.
 
 ### Example
@@ -75,6 +89,14 @@ Fetch one entry by id, including the **full body**.
 ```json
 { "entry_id": 42 }
 ```
+
+### Response fields (in addition to body/timestamps)
+
+| Field | Meaning |
+|-------|---------|
+| `see_also_entry_ids` | Related entry ids (cross-refs) |
+| `lesson_family_slug` | Thematic group slug, if assigned |
+| `tags` | Clerk-assigned tag names |
 
 ---
 
@@ -121,7 +143,7 @@ Clerk batch for unprocessed entries.
 
 ### Description
 
-> Clerk: process up to N unprocessed diary entries (tags, lesson_family, templated summary, re-embed, see_also). Idempotent.
+> Clerk: process up to N unprocessed entries—template summary, tags, lesson_family, re-embed, and **see_also** cross-refs when summaries are semantically related (same thread / recurring pattern / revisiting an earlier entry). Idempotent.
 
 ### Parameters
 
@@ -137,7 +159,7 @@ For each selected entry with `sleeptime_processed_at IS NULL`:
 2. Build a **templated summary** (gist + tags + lesson_family).
 3. Assign tags and `lesson_family`.
 4. Re-embed the summary.
-5. Link `see_also` to near-duplicate summaries above a similarity threshold.
+5. Link **`see_also`** to semantically related summaries above a similarity threshold (entry cross-refs—same thread, revisions, recurring patterns).
 6. Stamp `sleeptime_processed_at`.
 
 Idempotent: already-processed rows are not selected again.
