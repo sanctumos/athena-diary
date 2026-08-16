@@ -131,7 +131,7 @@ TOOLS_META = [
                 },
                 "min_score": {
                     "type": "number",
-                    "default": 0.78,
+                    "default": 0.6,
                     "description": "Cosine similarity floor for semantic neighbors (0–1).",
                 },
             },
@@ -192,7 +192,7 @@ def dispatch_tool(name: str, arguments: dict) -> str:
             conn = connect()
             try:
                 limit = int(args.get("limit") or 25)
-                min_score = float(args.get("min_score") or 0.78)
+                min_score = float(args.get("min_score") or 0.6)
                 result = see_also_relink_pass(
                     conn, limit=limit, min_score=min_score
                 )

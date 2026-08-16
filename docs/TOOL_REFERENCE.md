@@ -164,7 +164,7 @@ For each selected entry with `sleeptime_processed_at IS NULL`:
 2. Build a **templated summary** (gist + tags + lesson_family).
 3. Assign tags and `lesson_family`.
 4. Re-embed the summary.
-5. Link **`see_also`** to semantically related summaries above a similarity threshold (default cosine **0.78** — thematic siblings, not only near-duplicates). Explicit body refs (`entry 35`, `#35`, `correction to 35`) are linked when present.
+5. Link **`see_also`** to semantically related summaries above a similarity threshold (default cosine **0.6** — thematic siblings, not only near-duplicates). Explicit body refs (`entry 35`, `#35`, `correction to 35`) are linked when present.
 6. Stamp `sleeptime_processed_at`.
 
 Idempotent: already-processed rows are not selected again.
@@ -199,7 +199,7 @@ Re-scan **already-processed** entries and add missing `see_also` links without r
 | Parameter | Type | Required | Default | Description |
 |-----------|------|----------|---------|-------------|
 | `limit` | integer | no | `25` | Max processed entries to re-scan this pass. |
-| `min_score` | number | no | `0.78` | Cosine similarity floor for semantic neighbors (0–1). |
+| `min_score` | number | no | `0.6` | Cosine similarity floor for semantic neighbors (0–1). |
 
 ### Behavior
 
@@ -214,7 +214,7 @@ Does **not** change summaries, tags, or `sleeptime_processed_at`.
 ### Example
 
 ```json
-{ "limit": 50, "min_score": 0.78 }
+{ "limit": 50, "min_score": 0.6 }
 ```
 
 ### Response

@@ -26,7 +26,7 @@ from .vector_index import embed_and_store, search_similar
 ClerkAnnotator = Callable[[Entry], tuple[str, Sequence[str], Optional[str]]]
 
 # Thematic / same-thread linking (not only near-duplicate summaries).
-DEFAULT_SEE_ALSO_MIN_SCORE = 0.78
+DEFAULT_SEE_ALSO_MIN_SCORE = 0.6
 
 _EXPLICIT_ENTRY_RE = re.compile(
     r"(?:\bentry\b|\bentries\b|#)\s*(\d+)"
