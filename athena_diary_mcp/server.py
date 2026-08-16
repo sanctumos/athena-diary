@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-only
-"""Athena Diary MCP server — diary_write/get/search/sleeptime_pass."""
+"""Athena Diary MCP server — diary_write/get/search/sleeptime_pass/see_also_relink."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from typing import Any, Callable, List, Optional
 
 from .db import connect
 from .search import search_diary
-from .sleeptime import sleeptime_pass
+from .sleeptime import see_also_relink_pass, sleeptime_pass
 from .store import DiaryError, entry_detail, get_entry, write_entry
 from .version import __version__
 
@@ -112,6 +112,33 @@ TOOLS_META = [
             "additionalProperties": False,
         },
     },
+    {
+        "name": "diary_see_also_relink",
+        "description": (
+            "Re-scan already-processed entries and add see_also cross-refs (idempotent). "
+            "Does not rewrite summaries. Use after lowering the similarity threshold or "
+            "when older entries were clerked before links existed. Also picks up explicit "
+            "body refs (entry 35, #35, correction to 35). "
+            + _SEE_ALSO_HELP
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "default": 25,
+                    "description": "Max processed entries to re-scan this pass.",
+                },
+                "min_score": {
+                    "type": "number",
+                    "default": 0.78,
+                    "description": "Cosine similarity floor for semantic neighbors (0–1).",
+                },
+            },
+            "required": [],
+            "additionalProperties": False,
+        },
+    },
 ]
 
 
@@ -158,6 +185,17 @@ def dispatch_tool(name: str, arguments: dict) -> str:
             try:
                 limit = int(args.get("limit") or 10)
                 result = sleeptime_pass(conn, limit=limit)
+                return _json(asdict(result))
+            finally:
+                conn.close()
+        if name == "diary_see_also_relink":
+            conn = connect()
+            try:
+                limit = int(args.get("limit") or 25)
+                min_score = float(args.get("min_score") or 0.78)
+                result = see_also_relink_pass(
+                    conn, limit=limit, min_score=min_score
+                )
                 return _json(asdict(result))
             finally:
                 conn.close()

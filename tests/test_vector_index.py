@@ -175,7 +175,9 @@ def test_search_similar_vec0_knn_success(monkeypatch):
         ]
 
     monkeypatch.setattr(vi, "_hits_from_ids", fake_hits)
-    hits = vi.search_similar(conn, "venice", limit=5, provider=FixedEmbedProvider())
+    hits = vi.search_similar(
+        conn, "venice", limit=5, provider=FixedEmbedProvider(), min_score=0.0
+    )
     assert hits and hits[0].id == 7 and hits[0].rank == "vec"
 
 

@@ -2,7 +2,13 @@
 
 from athena_diary_mcp.db import connect
 from athena_diary_mcp.embeddings import HashEmbedProvider
-from athena_diary_mcp.sleeptime import default_annotator, sleeptime_pass
+from athena_diary_mcp.sleeptime import (
+    DEFAULT_SEE_ALSO_MIN_SCORE,
+    default_annotator,
+    explicit_entry_refs,
+    see_also_relink_pass,
+    sleeptime_pass,
+)
 from athena_diary_mcp.store import Entry, get_entry, list_see_also, list_unprocessed, write_entry
 
 
@@ -92,4 +98,50 @@ def test_custom_annotator(tmp_path, monkeypatch):
     got = get_entry(conn, e.id)
     assert "custom gist" in (got.summary or "")
     assert "LESSON_FAMILY: custom-family" in (got.summary or "")
+    conn.close()
+
+
+def test_explicit_entry_refs():
+    assert explicit_entry_refs("correction to entry 35 about dogears") == (35,)
+    assert explicit_entry_refs("see also #42 and entry 43") == (42, 43)
+    assert explicit_entry_refs("revisits entry 7") == (7,)
+    assert explicit_entry_refs("no refs here") == ()
+
+
+def test_see_also_relink_pass_wires_processed(tmp_path, monkeypatch):
+    monkeypatch.setenv("DIARY_DB", str(tmp_path / "d.db"))
+    conn = connect()
+    a = write_entry(conn, "exact same diary note for cluster test alpha")
+    b = write_entry(conn, "exact same diary note for cluster test alpha")
+    prov = HashEmbedProvider(dim=8)
+    sleeptime_pass(conn, limit=10, provider=prov, dedupe_min_score=0.99)
+    # Simulate stale clerk: remove links but keep processed stamp
+    conn.execute("DELETE FROM see_also")
+    conn.commit()
+    assert list_see_also(conn, a.id) == []
+
+    relink = see_also_relink_pass(
+        conn, limit=10, provider=prov, min_score=DEFAULT_SEE_ALSO_MIN_SCORE
+    )
+    assert relink.scanned >= 2
+    assert b.id in list_see_also(conn, a.id)
+    conn.close()
+
+
+def test_see_also_relink_explicit_body_ref(tmp_path, monkeypatch):
+    monkeypatch.setenv("DIARY_DB", str(tmp_path / "d.db"))
+    conn = connect()
+    prov = HashEmbedProvider(dim=8)
+    original = write_entry(conn, "canonical note about boundary patterns")
+    sleeptime_pass(conn, limit=5, provider=prov)
+    followup = write_entry(
+        conn, f"correction to entry {original.id}: refined boundary view"
+    )
+    sleeptime_pass(conn, limit=5, provider=prov)
+    conn.execute("DELETE FROM see_also")
+    conn.commit()
+
+    see_also_relink_pass(conn, limit=10, provider=prov, min_score=0.99)
+    assert followup.id in list_see_also(conn, original.id)
+    assert original.id in list_see_also(conn, followup.id)
     conn.close()

@@ -164,7 +164,7 @@ For each selected entry with `sleeptime_processed_at IS NULL`:
 2. Build a **templated summary** (gist + tags + lesson_family).
 3. Assign tags and `lesson_family`.
 4. Re-embed the summary.
-5. Link **`see_also`** to semantically related summaries above a similarity threshold (entry cross-refs—same thread, revisions, recurring patterns).
+5. Link **`see_also`** to semantically related summaries above a similarity threshold (default cosine **0.78** — thematic siblings, not only near-duplicates). Explicit body refs (`entry 35`, `#35`, `correction to 35`) are linked when present.
 6. Stamp `sleeptime_processed_at`.
 
 Idempotent: already-processed rows are not selected again.
@@ -183,6 +183,43 @@ Idempotent: already-processed rows are not selected again.
 ### Response
 
 JSON object, e.g. `{ "processed": N, "entry_ids": [...], "skipped_already_done": 0 }`.
+
+---
+
+## `diary_see_also_relink`
+
+Re-scan **already-processed** entries and add missing `see_also` links without re-clerking summaries.
+
+### Description
+
+> Re-scan processed entries and add see_also cross-refs (idempotent). Does not rewrite summaries. Use after lowering the similarity threshold or when older entries were clerked before links existed.
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `limit` | integer | no | `25` | Max processed entries to re-scan this pass. |
+| `min_score` | number | no | `0.78` | Cosine similarity floor for semantic neighbors (0–1). |
+
+### Behavior
+
+For each selected entry with `sleeptime_processed_at` set and a non-empty summary:
+
+1. Parse explicit entry refs in the body (`entry 35`, `#35`, `correction to 35`, …) and link when the target exists.
+2. Search semantically similar summaries (and body text fallback) above `min_score`.
+3. Insert bidirectional `see_also` rows (`INSERT OR IGNORE` — safe to rerun).
+
+Does **not** change summaries, tags, or `sleeptime_processed_at`.
+
+### Example
+
+```json
+{ "limit": 50, "min_score": 0.78 }
+```
+
+### Response
+
+JSON object, e.g. `{ "scanned": N, "entry_ids": [...], "links_added": M }`.
 
 ---
 

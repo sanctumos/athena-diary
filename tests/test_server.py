@@ -22,6 +22,7 @@ def test_tools_meta_names():
         "diary_get",
         "diary_search",
         "diary_sleeptime_pass",
+        "diary_see_also_relink",
     }
 
 
@@ -50,6 +51,12 @@ def test_dispatch_write_get_search_sleeptime(tmp_path, monkeypatch):
     dispatch_tool("diary_write", {"body": "second backlog entry for sleeptime clerk"})
     result = json.loads(dispatch_tool("diary_sleeptime_pass", {"limit": 5}))
     assert result["processed"] >= 1
+
+    relink = json.loads(
+        dispatch_tool("diary_see_also_relink", {"limit": 10, "min_score": 0.5})
+    )
+    assert relink["scanned"] >= 1
+    assert "links_added" in relink
 
 
 def test_dispatch_unknown_and_errors(tmp_path, monkeypatch):
@@ -98,9 +105,9 @@ async def test_register_tools_core():
         return kwargs
 
     tools = register_tools_core(list_deco, call_deco, text_factory, tool_factory)
-    assert len(tools) == 4
+    assert len(tools) == 5
     out = await listed["fn"]()
-    assert len(out) == 4
+    assert len(out) == 5
     # call_tool path
     with patch(
         "athena_diary_mcp.server.dispatch_tool", return_value='{"ok":true}'

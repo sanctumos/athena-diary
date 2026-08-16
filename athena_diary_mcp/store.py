@@ -104,6 +104,22 @@ def list_unprocessed(conn: sqlite3.Connection, limit: int = 50) -> Sequence[Entr
     return [Entry.from_row(r) for r in rows]
 
 
+def list_processed(conn: sqlite3.Connection, limit: int = 50) -> Sequence[Entry]:
+    """Processed entries with a clerk summary (candidates for see_also relink)."""
+    rows = conn.execute(
+        f"""
+        SELECT {_ENTRY_COLS} FROM entries
+        WHERE sleeptime_processed_at IS NOT NULL
+          AND summary IS NOT NULL
+          AND TRIM(summary) != ''
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (max(1, int(limit)),),
+    ).fetchall()
+    return [Entry.from_row(r) for r in rows]
+
+
 def ensure_tag(conn: sqlite3.Connection, name: str) -> int:
     """Insert tag if missing; return tag id."""
     clean = (name or "").strip().lower()

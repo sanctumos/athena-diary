@@ -10,7 +10,7 @@ Documentation for **Athena Diary**: an off-context SQLite journal exposed to age
 | [GETTING_STARTED.md](GETTING_STARTED.md) | Users / operators | Install, configure DB + embeds, run MCP, verify tools |
 | [LETTA_BOOTSTRAP.md](LETTA_BOOTSTRAP.md) | Operators | How Sanctum attached diary to a legacy Letta hot + sleeptime pair |
 | [MCP_CLIENTS.md](MCP_CLIENTS.md) | Users | ChatGPT, Claude Code / Desktop, Cursor, Letta, other MCP hosts |
-| [TOOL_REFERENCE.md](TOOL_REFERENCE.md) | Users / developers | Full contracts for `diary_write`, `diary_get`, `diary_search`, `diary_sleeptime_pass` |
+| [TOOL_REFERENCE.md](TOOL_REFERENCE.md) | Users / developers | Full contracts for `diary_write`, `diary_get`, `diary_search`, `diary_sleeptime_pass`, `diary_see_also_relink` |
 | [CONFIGURATION.md](CONFIGURATION.md) | Operators | Env vars, embed modes, STDIO vs SSE |
 | [AGENTS.md](AGENTS.md) | Agents (Athena, Ada, others) | Short tool summary and routing rules |
 | [COVERAGE.md](COVERAGE.md) | Contributors | ≥90% unit/e2e coverage gate |

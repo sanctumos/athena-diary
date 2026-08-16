@@ -103,6 +103,7 @@ def search_similar(
     table = ensure_vec0(conn, dimensions=len(qvec))
     if table:
         try:
+            fetch_lim = max(lim * 5, lim + 10)
             rows = conn.execute(
                 f"""
                 SELECT entry_id, distance
@@ -111,10 +112,12 @@ def search_similar(
                 ORDER BY distance
                 LIMIT ?
                 """,
-                (list(qvec), lim),
+                (list(qvec), fetch_lim),
             ).fetchall()
             ids = [int(r["entry_id"]) for r in rows]
-            return _hits_from_ids(conn, ids, rank="vec")
+            if min_score > 0:
+                ids = _filter_ids_by_cosine(conn, ids, qvec, min_score)
+            return _hits_from_ids(conn, ids[:lim], rank="vec")
         except sqlite3.Error:
             pass
 
@@ -193,3 +196,31 @@ def search_diary(
         if len(merged) >= lim:
             break
     return merged[:lim]
+
+
+def _filter_ids_by_cosine(
+    conn: sqlite3.Connection,
+    ids: Sequence[int],
+    qvec: Sequence[float],
+    min_score: float,
+) -> List[int]:
+    """Keep entry ids whose stored embedding meets ``min_score`` vs ``qvec``."""
+    if not ids:
+        return []
+    placeholders = ",".join("?" * len(ids))
+    rows = conn.execute(
+        f"SELECT entry_id, dim, vector FROM embeddings WHERE entry_id IN ({placeholders})",
+        tuple(ids),
+    ).fetchall()
+    by_id = {int(r["entry_id"]): r for r in rows}
+    out: List[int] = []
+    for eid in ids:
+        row = by_id.get(eid)
+        if row is None:
+            continue
+        vec = unpack_vector(row["vector"])
+        if len(vec) != len(qvec):
+            continue
+        if cosine(qvec, vec) >= min_score:
+            out.append(eid)
+    return out
