@@ -74,6 +74,7 @@ def test_sleeptime_see_also_dedupe(tmp_path, monkeypatch):
     sleeptime_pass(conn, limit=10, provider=prov, dedupe_min_score=0.99)
     related = list_see_also(conn, a.id)
     assert b.id in related
+    assert a.id in list_see_also(conn, b.id)
     conn.close()
 
 

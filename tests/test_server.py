@@ -39,6 +39,8 @@ def test_dispatch_write_get_search_sleeptime(tmp_path, monkeypatch):
     got = json.loads(dispatch_tool("diary_get", {"entry_id": entry["id"]}))
     assert got["id"] == entry["id"]
     assert "see_also_entry_ids" in got
+    assert "see_also_older_entry_ids" in got
+    assert "see_also_newer_entry_ids" in got
     assert "lesson_family_slug" in got
     assert "tags" in got
 

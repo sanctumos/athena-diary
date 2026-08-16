@@ -17,11 +17,12 @@ from .version import __version__
 logger = logging.getLogger(__name__)
 
 _SEE_ALSO_HELP = (
-    "Cross-reference links between related entries live in see_also (see_also_entry_ids on "
-    "diary_get). Sleeptime creates these when entry summaries are semantically related—same "
-    "thread, recurring pattern, or a later note that revisits an earlier one. Original entries "
-    "stay canonical; write corrections as new entries and let sleeptime wire see_also. "
-    "lesson_family_slug groups thematic siblings."
+    "Cross-reference links live in see_also. Sleeptime links semantically related entries "
+    "(same thread, recurring pattern, a later note revisiting an earlier one). Each link is "
+    "stored both ways: when a newer entry is linked to an older one, diary_get on the older "
+    "entry lists the newer id in see_also_newer_entry_ids (and the newer entry lists the older "
+    "in see_also_older_entry_ids). Original entries stay canonical—write corrections as new "
+    "entries. lesson_family_slug groups thematic siblings."
 )
 
 TOOLS_META = [
@@ -57,7 +58,8 @@ TOOLS_META = [
         "name": "diary_get",
         "description": (
             "Fetch one diary entry by id (full body). Response includes see_also_entry_ids "
-            "(cross-refs to related entries), lesson_family_slug, and tags. "
+            "(all related entries), see_also_older_entry_ids, see_also_newer_entry_ids "
+            "(bidirectional crosslinks by age), lesson_family_slug, and tags. "
             + _SEE_ALSO_HELP
         ),
         "inputSchema": {

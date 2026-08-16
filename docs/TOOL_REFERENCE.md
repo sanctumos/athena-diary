@@ -57,7 +57,7 @@ These already exist—no separate “dogear” tool is required.
 
 | Mechanism | What it is |
 |-----------|------------|
-| **`see_also`** | Entry-to-entry cross-refs. Sleeptime links entries whose **summaries** embed as semantically related (same thread, recurring pattern, a later note revisiting an earlier one). Stored bidirectionally. Exposed on `diary_get` as `see_also_entry_ids`. |
+| **`see_also`** | Entry-to-entry cross-refs. Sleeptime links entries whose **summaries** embed as semantically related. **Stored bidirectionally:** when entry 43 links to entry 35, `diary_get(35)` includes 43 in `see_also_newer_entry_ids` and `diary_get(43)` includes 35 in `see_also_older_entry_ids`. |
 | **`lesson_family` / `lesson_family_slug`** | Thematic bucket for entries about the same lesson or topic. Assigned during sleeptime. |
 
 **Canonical rule:** old entries are not edited in place. When a view changes, **write a new entry** (cite the earlier id in the body if helpful). Sleeptime may wire `see_also` so the chain stays visible without sanitizing the original.
@@ -70,7 +70,7 @@ Fetch one entry by id, including the **full body** and cross-reference metadata.
 
 ### Description
 
-> Fetch one diary entry by id (full body). Response includes `see_also_entry_ids` (cross-refs to related entries), `lesson_family_slug`, and `tags`.
+> Fetch one diary entry by id (full body). Response includes `see_also_entry_ids`, `see_also_older_entry_ids`, `see_also_newer_entry_ids` (bidirectional crosslinks by age), `lesson_family_slug`, and `tags`.
 
 ### Parameters
 
@@ -80,8 +80,11 @@ Fetch one entry by id, including the **full body** and cross-reference metadata.
 
 ### Behavior
 
-- Returns the full row plus `see_also_entry_ids`, `lesson_family_slug`, and `tags`.
-- `see_also_entry_ids` is empty until sleeptime has processed the entry (and may stay empty if no related summary matched).
+- Returns the full row plus cross-ref metadata. Links are **bidirectional** once sleeptime creates them.
+- `see_also_entry_ids` — all related entry ids
+- `see_also_older_entry_ids` — related entries written **before** this one (corrections point here from newer entries)
+- `see_also_newer_entry_ids` — related entries written **after** this one (canonical originals accumulate back-links here)
+- Empty until sleeptime has processed the entry and a related summary matched.
 - Errors with a clear message if the id does not exist.
 
 ### Example
@@ -94,7 +97,9 @@ Fetch one entry by id, including the **full body** and cross-reference metadata.
 
 | Field | Meaning |
 |-------|---------|
-| `see_also_entry_ids` | Related entry ids (cross-refs) |
+| `see_also_entry_ids` | All related entry ids |
+| `see_also_older_entry_ids` | Related entries older than this one |
+| `see_also_newer_entry_ids` | Related entries newer than this one (back-links on canonical originals) |
 | `lesson_family_slug` | Thematic group slug, if assigned |
 | `tags` | Clerk-assigned tag names |
 

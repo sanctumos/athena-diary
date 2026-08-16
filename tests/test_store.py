@@ -77,6 +77,11 @@ def test_entry_detail_includes_cross_refs(tmp_path, monkeypatch):
     conn.commit()
     detail = entry_detail(conn, get_entry(conn, b.id))
     assert detail["see_also_entry_ids"] == [a.id]
+    assert detail["see_also_older_entry_ids"] == [a.id]
+    assert detail["see_also_newer_entry_ids"] == []
+    detail_a = entry_detail(conn, get_entry(conn, a.id))
+    assert detail_a["see_also_newer_entry_ids"] == [b.id]
+    assert detail_a["see_also_older_entry_ids"] == []
     assert detail["tags"] == ["pattern", "revision"]
     assert detail["lesson_family_slug"] == "self-observation"
     conn.close()

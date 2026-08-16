@@ -212,6 +212,38 @@ def list_see_also(conn: sqlite3.Connection, entry_id: int) -> Sequence[int]:
     return [int(r["related_entry_id"]) for r in rows]
 
 
+def split_see_also_by_age(
+    conn: sqlite3.Connection, entry: Entry
+) -> tuple[list[int], list[int]]:
+    """
+    Partition see_also neighbors into older vs newer than ``entry`` (by created_at, then id).
+
+    Links are stored bidirectionally: when sleeptime links a new entry to an older hit,
+    both rows get a see_also row. Older entries therefore list newer ids under
+    see_also_newer_entry_ids once linked.
+    """
+    related = list(list_see_also(conn, entry.id))
+    if not related:
+        return [], []
+    placeholders = ",".join("?" * len(related))
+    rows = conn.execute(
+        f"SELECT id, created_at FROM entries WHERE id IN ({placeholders})",
+        tuple(related),
+    ).fetchall()
+    focal_ts = str(entry.created_at)
+    focal_id = entry.id
+    older: list[int] = []
+    newer: list[int] = []
+    for row in rows:
+        rid = int(row["id"])
+        ts = str(row["created_at"])
+        if ts < focal_ts or (ts == focal_ts and rid < focal_id):
+            older.append(rid)
+        elif ts > focal_ts or (ts == focal_ts and rid > focal_id):
+            newer.append(rid)
+    return sorted(older), sorted(newer)
+
+
 def list_entry_tags(conn: sqlite3.Connection, entry_id: int) -> tuple[str, ...]:
     rows = conn.execute(
         """
@@ -240,6 +272,8 @@ def get_lesson_family_slug(
 
 def entry_detail(conn: sqlite3.Connection, entry: Entry) -> dict[str, Any]:
     """Entry row plus cross-refs and clerk metadata for MCP responses."""
+    see_also_older, see_also_newer = split_see_also_by_age(conn, entry)
+    see_also_all = sorted(set(see_also_older) | set(see_also_newer))
     return {
         "id": entry.id,
         "body": entry.body,
@@ -254,5 +288,7 @@ def entry_detail(conn: sqlite3.Connection, entry: Entry) -> dict[str, Any]:
         "lesson_family_slug": get_lesson_family_slug(conn, entry.lesson_family_id),
         "sleeptime_processed_at": entry.sleeptime_processed_at,
         "tags": list(list_entry_tags(conn, entry.id)),
-        "see_also_entry_ids": list(list_see_also(conn, entry.id)),
+        "see_also_entry_ids": see_also_all,
+        "see_also_older_entry_ids": see_also_older,
+        "see_also_newer_entry_ids": see_also_newer,
     }
